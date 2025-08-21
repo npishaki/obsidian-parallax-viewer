@@ -1,7 +1,24 @@
-/* Obsidian Plugin: Parallax Thumbnails */
+/* Obsidian Plugin: Parallax Thumbnails v1.3 */
 const { Plugin, Modal, Setting, Notice, MarkdownView } = require('obsidian');
 
 function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+/** Resolve a vault-relative image path to a browser-usable URI. */
+function resolveImgSrc(app, src){
+  // Keep explicit URLs
+  if (/^(https?:|app:\/\/)/i.test(src)) return src;
+  try {
+    const af = app.vault.getAbstractFileByPath(src);
+    // TFile has 'extension'; TFolder does not
+    if (af && Object.prototype.hasOwnProperty.call(af, 'extension')) {
+      return app.vault.getResourcePath(af);
+    }
+  } catch (e) {
+    console.warn('[ParallaxThumbs] resolveImgSrc failed for', src, e);
+  }
+  // Fallback: original string (may still work in some contexts)
+  return src;
+}
 
 module.exports = class ParallaxThumbsPlugin extends Plugin {
   async onload() {
@@ -19,7 +36,7 @@ module.exports = class ParallaxThumbsPlugin extends Plugin {
         return;
       }
       if (!cfg || !Array.isArray(cfg.layers)) {
-        el.createEl('pre', { text: 'parallax: missing \"layers\" array.' });
+        el.createEl('pre', { text: 'parallax: missing "layers" array.' });
         return;
       }
 
@@ -35,7 +52,7 @@ module.exports = class ParallaxThumbsPlugin extends Plugin {
       const controls = el.createDiv({ cls: 'parallax-controls' });
       const btnSettings = controls.createEl('button', { text: 'Settings' });
       const btnReset = controls.createEl('button', { text: 'Reset' });
-      controls.createDiv({ cls:'hint', text:'Tip: Shift+Drag to move • Drag corner to resize • Double‑click viewer to reset' });
+      controls.createDiv({ cls:'hint', text:'Tip: Shift+Drag to move • Drag corner to resize • Double-click viewer to reset' });
 
       // Stage
       const stage = el.createDiv({ cls: 'parallax-stage ' + (align === 'center' ? 'center' : align === 'right' ? 'right' : 'left') });
@@ -55,13 +72,13 @@ module.exports = class ParallaxThumbsPlugin extends Plugin {
       card.style.setProperty('--pt-card-h', targetH + 'px');
       card.setAttr('aria-label', 'Parallax thumbnail');
 
-      // Layers
+      // Layers  (patched: resolve src)
       const layers = [];
       for (const L of cfg.layers) {
         const layer = card.createDiv({ cls: 'parallax-layer' });
         layer._depth = Number(L.depth) || 0;
         const img = layer.createEl('img');
-        img.src = L.src;
+        img.src = resolveImgSrc(this.app, String(L.src || ''));   // <-- change
         img.alt = 'parallax-layer';
         layers.push(layer);
       }
