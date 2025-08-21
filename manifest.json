@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-parallax-thumbs",
+  "name": "Parallax Thumbnails",
+  "version": "1.3.0",
+  "minAppVersion": "1.5.0",
+  "description": "Parallax thumbnails with external controls, badge support, and draggable resize handle.",
+  "author": "Noah + AI agents",
+  "authorUrl": "https://",
+  "isDesktopOnly": false
+}
